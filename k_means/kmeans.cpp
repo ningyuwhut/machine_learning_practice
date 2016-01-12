@@ -32,18 +32,10 @@ int main(int argc, char** argv){
     while( getline(fin, line) ){ //每次读取一行
 	line_vec.clear();
 	split(line, delimeter, line_vec);
-//	for( int i=0; i < line_vec.size(); ++i )
-//	    cout <<  line_vec[i] << " ";
-//	cout << endl;
 	vector<float> vec_without_cluster_index(line_vec.begin(), line_vec.end()-1);
 	dataset.push_back(vec_without_cluster_index); //数据文件的最后一列是类的下标
     }
-    for( int i=0; i< dataset.size(); ++i ){
-	for( int j =0; j < dataset[i].size(); ++j ){
-	    cout << dataset[i][j] << " ";
-	}
-	cout << endl;
-    }
+    //在进行聚类前应该先对特征进行归一化x-\mu/\phi,这里没有实现
 
     int sample_number=dataset.size();
     int feature_number=dataset[0].size();
@@ -57,9 +49,6 @@ int main(int argc, char** argv){
     }
     vector<int> cluster_of_samples;
     kmeans( dataset, sample_number, feature_number, cluster_number, clusters, cluster_of_samples);
-    for( i=0; i< cluster_of_samples.size(); ++i ){
-	cout << i << " " << cluster_of_samples[i] << endl;
-    }
     return 0;
 }
 
@@ -80,12 +69,9 @@ void kmeans( vector<vector<float> >  dataset, int sample_number, int feature_num
 	    cluster_index=rand()%sample_number; //随机选择一个样本作为聚类中心
 	}
 	cluster_index_vec.push_back(cluster_index);
-	cout << i << "cluster_index" << cluster_index << " " << endl;
 	for( int k =0; k< feature_number; ++k){
 	    clusters[i][k]=dataset[cluster_index][k];
-	    cout << clusters[i][k] << " ";
 	}
-	cout << endl;
     }
 
     int iteration=0;
@@ -144,22 +130,11 @@ void kmeans( vector<vector<float> >  dataset, int sample_number, int feature_num
 	    for( int i =0; i < sample_index.size(); ++i ){
 		for( int j=0; j < feature_number; ++j ){
 		    clusters[cluster_index][j]+=dataset[sample_index[i]][j];
-		   // cout << clusters[cluster_index][j] <<e;
 		}
 	    }
 	    for( int i=0; i < feature_number; ++i ){
-//		cout <<"feature_number" << feature_number << endl;
-		cout << clusters[cluster_index][i]<< " ";
-
 		clusters[cluster_index][i]=float(clusters[cluster_index][i])/float(sample_index.size());
 	    }
-	    cout << endl;
-	}
-	for( int i=0; i< cluster_number; ++i ){
-	    for( int j =0; j < feature_number; ++j ){
-		cout << clusters[i][j] << " " ;
-	    }
-	    cout << endl;
 	}
 
 	iteration++;

@@ -1,0 +1,184 @@
+#encoding=utf8
+import sys
+import math
+
+class DecisionTreeNode(object):
+    def __init__(self,split_feature, feature_value):
+	self.split_feature=split_feature
+	self.feature_value=feature_value
+#	self.feature_list=[] #仍然可用的feature
+	self.childs=None
+	self.parents=None
+	self.label=None
+
+    def get_split_feature():
+	return self.split_feature
+    def set_split_feature(split_feature):
+	self.split_feature=split_feature
+    def get_feature_value():
+	return self.feature_value
+    def set_feature_value(feature_value):
+	self.feature_value=feature_value
+    def get_childs():
+	return self.childs
+    def set_childs(childs):
+	self.childs=childs
+    def get_label():
+	return self.label
+    def set_label(label):
+	self.label=label
+
+class DecisionTree(object):
+    def __init__(self, dataset , labels):
+	self.dataset=dataset
+	self.labels=labels
+	self.root=None
+
+    def build_tree(self):
+	feature_list=[ 1 for i in range(len(self.dataset[0]))] 
+	self.root=build_tree_sub(self.dataset, self.labels, feature_list)	
+    def majority(labels):
+	#首先统计每个label的出现次数
+	#然后求次数最多的label作为叶子节点的类标
+	count_hash={}
+	for i in labels:
+	    if i in count_hash:
+		count_hash[i]+=1
+	    else:
+		count_hash[i]=1
+	maximum_count=0
+	majority_label=None
+	for i in count_hash:
+	    if count_hash[i] > maximum_count:
+		maximum_count=count_hash[i]
+		majority_label=i
+	
+	return majority_label
+
+    def build_tree_sub(self, dataset, labels, feature_list):
+	if len(dataset) == 1:
+	    leaf=DecisionTreeNode()
+	    leaf.set_label(labels[0])
+	    return leaf
+	elif len(set(labels))==1:
+	    leaf=DecisionTreeNode()
+	    leaf.set_label(labels[0])
+	    return leaf
+	elif feature_list.count(1) == 0:
+	    leaf=DecisionTreeNode()
+	    leaf.set_label( majority( labels ) )
+	    return leaf
+	elif:
+	    split_feature=choose_feature(dataset,labels, feature_list)
+	    #根据这个特征把数据集分成几个部分
+	    tmp_hash=split_dataset_by_feature( dataset, split_feature)
+	    child_nodes=[]
+	    parent_feature_list=feature_list[:]
+	    parent_feature_list[split_feature]=-1 #该特征不再用来分裂
+	    for i in tmp_hash:
+		subset=dataset[ j for j in tmp_hash[i] ]
+		corr_label=labels[ j for j in tmp_hash[i]]
+		child=build_tree_sub(subset, corr_labels, parent_feature_list)
+		child.feature_value=subset[0][split_feature]
+		child_nodes.append(child)
+	    parent_node=DecisionTreeNode(split_feature)
+	    parent_node.set_childs(child_nodes)
+	    return parent_node
+	
+
+#根据某个特征的取值将数据集分成几个部分，每个部分该特征的取值相同
+    def split_dataset_by_feature(self, dataset, feature_index):
+	sample_number=len(dataset)
+	feature_list=[ dataset[j][feature_index] for j in range( sample_number) ]
+
+	tmp_hash={}
+	for j in range(sample_number):
+	    if feature_list[j] in tmp_hash:
+		tmp_hash[feature_list[j]].append(j)
+	    else:
+		tmp_hash[feature_list[j]]=[j]
+
+#feature_index:用来分割的特征下标
+    def information_gain(self, dataset, labels, feature_list, feature_index):
+	sample_number=len(self.labels)
+	dataset_entropy=self.entropy(labels)
+	tmp_hash=split_dataset_by_feature(dataset, feature_index)
+
+	#首先，计算该特征的所有取值，以及每个取值对应的下标集合
+	tmp_entropy=0.0
+	for k in tmp_hash:
+#	    print "K", k
+#	    print "tmp_hash[k]", tmp_hash[k]
+#	    print  self.entropy(tmp_hash[k])
+	    tmp_label=label[ i for i in tmp_hash[k]]
+	    tmp_entropy+=len(tmp_hash[k])/float(sample_number)*self.entropy(tmp_hash[k])
+	information_gain=dataset_entropy-tmp_entropy	
+
+	return information_gain
+
+		
+    #index是要计算熵的元素集合的下标构成的列表 
+    def entropy(self, labels):
+	#compute the occurance of each label in labels
+#	print "in entropy"
+	count={}
+	sample_number=len(labels)
+	for i in range(sample_number):
+	    if labels[i] in count:
+		count[labels[i]]+=1
+	    else:
+		count[labels[i]]=1
+	entropy=0.0
+	for i in count.keys():
+	    p_i=float(count[i])/sample_number#attention how to get the result of division
+	    entropy -= p_i * math.log(p_i,2)
+	return entropy
+
+    #统计每个特征的信息增益
+    #dataset 为数据集
+    #labels为对应的目标变量
+    #feature_list为可以用来分割的特征，若值为1表示该特征可以用于分裂
+    def choose_feature(self, dataset, labels, feature_list):
+	#feature_number=len(dataset[0])
+#	feature_number=feature_list.count(1)
+#	sample_number=len(labels)
+	target_feature_index=-1
+	max_information_gain=-1
+#	print "feature_number", feature_number
+#	print "sample_number", sample_number
+#	for i in range(feature_number):
+	for i in range(len(feature_list)):
+	    if feature_list[i] == 1:
+		print "feature_index", i
+		ig=self.information_gain(dataset, labels, feature_list, i)
+		print "feature_"+str(i), ig
+		if ig > max_information_gain:
+		    max_information_gain=ig
+		    target_feature_index=i
+
+	return target_feature_index		
+
+if __name__ == '__main__':
+    dataset=[
+		[0,0,0,0],
+		[0,0,0,1],
+		[0,1,0,1],
+		[0,1,1,0],
+		[0,0,0,0],
+		[1,0,0,0],
+		[1,0,0,1],
+		[1,0,1,1],
+		[1,1,1,2],
+		[1,0,1,2],
+		[2,0,1,2],
+		[2,0,1,1],
+		[2,1,0,1],
+		[2,1,0,2],
+		[2,0,0,0]
+	    ]
+    print len(dataset)
+    labels=[0,0,1,1,0,0,0,1,1,1,1,1,1,1,0]
+
+    test_tree=DecisionTree(dataset, labels)
+    print test_tree.entropy(range(len(labels)))
+    print test_tree.choose_feature()
